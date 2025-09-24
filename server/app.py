@@ -55,3 +55,34 @@ api.add_resource(ShowArticle, '/articles/<int:id>')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
+
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    session["user_id"] = user.id
+    return jsonify({"id": user.id, "username": user.username}), 200
+
+@app.route("/logout", methods=["DELETE"])
+def logout():
+    session.pop("user_id", None)
+    return "", 204
+
+@app.route("/check_session", methods=["GET"])
+def check_session():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({}), 401
+
+    return jsonify({"id": user.id, "username": user.username}), 200
